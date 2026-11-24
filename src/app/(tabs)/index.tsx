@@ -1,10 +1,14 @@
 import axios from 'axios';
+import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { FlatList, Image, Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { FlatList, Image, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import useStore from '../../../store';
+
 
 export default function App() {
 
+  const router = useRouter();
   const getDt = new Date();
   const today = getDt.toISOString().split('T')[0];
   // const homList = ['react', 'gamedev', 'C++', 'javascript', 'python', ]
@@ -31,6 +35,7 @@ export default function App() {
   const [cpp, setCpp] = useState([]);
   const [c, setC] = useState([]);
 
+  const setInfo = useStore((state) => state.setInfo)
 
 
   const reqRct = {
@@ -134,14 +139,21 @@ export default function App() {
 
   }
 
+  // useEffect(()=> {
+  //   setParam('');
+  // }, []);
+
   useEffect(() => {
     getData();
+
   }, [])
+
+  const details = ((item) => {setInfo(item)});
 
   const Item = ({item}) => (
     <TouchableOpacity 
       style = {styles.card} 
-      onPress = {()=> {Linking.openURL(item.course.url_with_coupon)}}>
+      onPress = {() => {router.push('/details')}}>
       <Image source = {{uri: item.course.image_url}} style={styles.image} />
       <View>
         <Text style={styles.name}>{item.course.name}</Text>
@@ -172,7 +184,7 @@ export default function App() {
   return(
     <SafeAreaProvider>
       <SafeAreaView style = {styles.scrn} >
-        {/* <StatusBar hidden={true} /> */}
+        <StatusBar hidden={true} />
         <ScrollView>
           <Homrow title='React Courses' data={rct} />
           <Homrow title='Data Science' data={gmdv} />

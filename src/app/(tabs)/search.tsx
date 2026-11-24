@@ -1,15 +1,26 @@
 import axios from 'axios';
-import { useEffect, useState } from 'react';
-import { FlatList, Image, Linking, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useState } from 'react';
+import { FlatList, Image, Linking, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
-import { param } from '../../param';
+import useStore from '../../../store';
 
 export default function App() {
 
   const getDt = new Date();
   const today = getDt.toISOString().split('T')[0];
   
-  const [srch, setSrch] = useState([]);
+  const [srch, setSrch] = useState('');
+  const [load, setLoad] = useState('');
+
+  const param = useStore((state: any)=>state.param);
+  const setParam = useStore((state: any) => state.setParam);
+  const [err, setErr] = useState('');
+
+  const enter = async () => {
+    await getData();
+    setParam(srch);
+    setLoad('a');
+  }
 
 
 
@@ -37,20 +48,20 @@ export default function App() {
         clnDataa = JSON.parse(clnDataa.slice(start));
       }
       setSrch(clnDataa.items);
-    } catch(error) {console.log(error)}
+    } catch( error) {
+      console.log('asdf',error);
+      setErr('a');
+    }
 
 
   }
 
-  useEffect(() => {
-    getData();
-  }, [])
 
-  const Item = ({item}) => (
+  const Item = ({item}: any) => (
     <TouchableOpacity 
       style = {styles.card} 
       onPress = {()=> {Linking.openURL(item.course.url_with_coupon)}}>
-      <Image source = {{uri: item.course.image_url}} style={styles.image} />
+      <Image source = {{uri: item?.course?.image_url}} style={styles.image} />
       <View>
         <Text style={styles.name}>{item.course.name}</Text>
         <Text>{item.course.authors.name}</Text>
@@ -69,7 +80,7 @@ export default function App() {
         style={styles.rowbg}
         data={data}
         showsHorizontalScrollIndicator = {false}
-        keyExtractor={(item, index) => `${item.course.id ?? item.coupon.id ?? 'no-id'}-${index}` }
+        keyExtractor={(item, index) => `${item?.course?.id ?? item?.coupon?.id ?? 'no-id'}-${index}` }
         renderItem={({item}) => <Item item={item} />}
       />
     </View>
@@ -80,8 +91,27 @@ export default function App() {
   return(
     <SafeAreaProvider>
       <SafeAreaView style = {styles.scrn} >
-        {/* <StatusBar hidden={true} /> */}
-          <Homrow title='Search Results' data={srch} />
+        <StatusBar hidden={true} />
+          <TextInput 
+          style={styles.bar}
+          placeholder="Search"
+          placeholderTextColor="#898ea1"
+          value={srch}
+          onChangeText={setSrch}
+          onSubmitEditing={enter}
+          returnKeyType="search"
+          autoCapitalize='none'/>
+          {
+            err ? (<View> <Text>Data not fetched</Text></View>) : (
+               load ? (<Homrow title='Search Results' data={srch} />) : (
+              <View>
+                <Text >Search..</Text>
+              </View>
+            )
+            )
+           
+          }
+          
       </SafeAreaView>
     </SafeAreaProvider>
   );
@@ -149,5 +179,15 @@ const styles = StyleSheet.create({
     fontSize:18,
     fontWeight:'bold',
     color:'#79eb6c'
-  }
+  },
+
+  bar: {
+    marginTop:6,
+    backgroundColor: '#313244',
+    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    fontSize: 16,
+    color: '#898ea1',
+  },
 });
